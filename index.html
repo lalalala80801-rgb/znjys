@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>智能交易所 · 曼谷 · 门店专属 · 云同步版（3国/页，默认 6 秒）</title>
+<style>
+:root{
+  --bg:#0a0f1a; --panel:#0f172a; --panel2:#0b1324; --accent:#f59e0b;
+  --buy:#ef4444; --sell:#3b82f6; --text:#e5e7eb; --muted:#9ca3af; --grid:#1f2a3d;
+  --radius:18px; --shadow:0 12px 44px rgba(0,0,0,.45),0 0 0 1px rgba(20,184,166,.18) inset;
+  --fs-base:1;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background: radial-gradient(1200px 800px at 10% -10%, #0b1b30 10%, #0a0f1a 60%);
+  color:var(--text); font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+  user-select:none;
+}
+[contenteditable]{-webkit-user-select:text; user-select:text; cursor:text;}
+.wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:100%}
+header{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 20px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:56px;height:56px}
+.shopname .cn{font-size:clamp(22px,2.2vw,30px);font-weight:900;letter-spacing:.5px}
+.shopname .en{font-size:12px;opacity:.9}
+.hours{color:#a7f3d0;font-weight:800}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:#111827;color:#e5e7eb;border:1px solid #2b3648;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+.btn:hover{background:#0f172a}
+.btn[aria-pressed="true"]{outline:2px solid #2563eb}
+.clock{text-align:right}.clock .time{font-size:26px;font-weight:800}.clock .date{font-size:13px;color:#9fb3c8}
+footer{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid #233146;color:#9fb3c8}
+
+.board{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid #233146;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin:16px 20px}
+.thead,.row{display:grid;grid-template-columns:88px 1fr 220px 210px 210px;align-items:center}
+.thead{background:linear-gradient(180deg,#0e1527,#0b1120);border-bottom:1px solid #233146;position:sticky;top:0;z-index:2}
+.thead div{padding:16px 8px;font-weight:900;letter-spacing:.4px}
+.th-c{font-size:28px}.th-b{font-size:28px;color:var(--buy)}.th-s{font-size:28px;color:var(--sell)} .th-d{font-size:28px}
+.tb{max-height:72vh;overflow:hidden;position:relative}
+.page{overflow-y:auto;overflow-x:hidden;max-height:72vh;scroll-behavior:smooth}
+.row{border-top:1px solid var(--grid);background:transparent}
+.cell{padding:12px 10px;font-size:calc(26px * var(--fs-base))}
+.flag-left{font-size:34px; display:inline-flex; width:48px; justify-content:center; align-items:center}
+.code{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.code .tag{font-weight:900;opacity:.95}
+.code .cn{font-weight:900;color:#fca5a5}
+.code .th{opacity:.92;color:#a7f3d0;font-weight:800}
+.code .country{opacity:.8;color:#93c5fd;font-weight:800}
+.numWrap{display:flex;justify-content:center;gap:8px;align-items:center}
+.num{min-width:160px;text-align:center;font-variant-numeric:tabular-nums lining-nums;
+     padding:6px 10px;border-radius:8px;transition:background .2s ease, box-shadow .2s ease;}
+.num:focus{background:#0b1a2e;box-shadow:0 0 0 2px #294569 inset}
+.buy{color:var(--buy);font-weight:900}.sell{color:var(--sell);font-weight:900}.denom{font-weight:900;min-width:120px;text-align:center}
+.sub{opacity:.9}
+.group-head{background:linear-gradient(180deg,rgba(255,255,255,.015),rgba(255,255,255,0));}
+.group-tail{margin-bottom:2px;}
+.page-indicator{position:absolute;right:16px;bottom:12px;color:#9fb3c8;font-weight:800;background:rgba(0,0,0,.25);padding:6px 10px;border-radius:999px;border:1px solid #223049;z-index:3}
+.hide{display:none !important}
+#gearFloat{position:fixed; right:12px; top:10px; z-index:999; background:#0f172a;border:1px solid #2b3648;color:#e5e7eb;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);}
+</style>
+</head>
+<body>
+<div id="gearFloat" class="hide">⚙️ 显示设置</div>
+<div class="wrap" id="root">
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-label="品牌LOGO">
+        <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#0b3b78"/><stop offset="1" stop-color="#122a4a"/></linearGradient></defs>
+        <rect x="0" y="0" width="120" height="120" rx="24" fill="url(#g)"/>
+        <circle cx="34" cy="40" r="16" fill="#f59e0b"/><path d="M18 84 L46 62 L70 78 L102 48" stroke="#22c55e" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <text x="60" y="48" text-anchor="middle" font-size="26" fill="#f59e0b" font-weight="800">¥</text>
+      </svg>
+      <div class="shopname">
+        <div class="cn" id="shopCN">智能交易所 · 曼谷</div>
+        <div class="en" id="shopEN">Intelligent Exchange · Bangkok</div>
+        <div class="hours" id="hoursText">营业时间：24 小时</div>
+      </div>
+    </div>
+
+    <div class="controls" id="controls">
+      <input id="room" class="btn" style="width:160px" value="bangkok" title="房间名（云同步使用）" />
+      <button class="btn" id="btn-cloud">☁️ 云同步：关</button>
+
+      <button class="btn" id="btn-cycle-toggle" title="播放/暂停轮播">▶️ 轮播播放</button>
+      <label class="btn" style="display:flex;gap:6px;align-items:center">
+        速度 <input id="speed" type="range" min="0" max="30" step="1" value="6" style="width:140px">
+        <input id="speedNum" type="number" min="0" max="120" step="1" value="6" style="width:64px;background:#0b1222;color:#e5e7eb;border:1px solid #2b3648;border-radius:8px;padding:6px">
+        <span id="speedLabel">秒</span>
+      </label>
+      <button class="btn" id="btn-pause-edit" aria-pressed="true" title="编辑时自动暂停轮播">✍️ 编辑时暂停：开</button>
+
+      <button class="btn" id="btn-full">全屏</button>
+      <button class="btn" id="btn-lock">🔓 编辑中</button>
+      <button class="btn" id="btn-font-up">字体 +</button>
+      <button class="btn" id="btn-font-down">字体 −</button>
+
+      <button class="btn" id="btn-export">导出</button>
+      <label class="btn" for="file" style="cursor:pointer">导入</label>
+      <input id="file" type="file" accept=".json" style="display:none" />
+      <button class="btn" id="btn-undo">撤销</button>
+      <button class="btn" id="btn-wake">🌙 常亮：关</button>
+
+      <button class="btn" id="btn-save">本机保存</button>
+      <button class="btn" id="btn-reset">恢复默认</button>
+      <button class="btn" id="btn-hide">隐藏设置</button>
+
+      <span id="hint" style="color:#9fb3c8;margin-left:6px"></span>
+    </div>
+
+    <div class="clock">
+      <div class="time" id="time">--:--:--</div>
+      <div class="date" id="date">—</div>
+    </div>
+  </header>
+
+  <section class="board">
+    <div class="thead">
+      <div class="cell"></div>
+      <div class="cell th-c">Currency 货币 · สกุลเงิน</div>
+      <div class="cell th-d" style="text-align:center">Denomination 面额</div>
+      <div class="cell th-b" style="text-align:center">BUY 买入</div>
+      <div class="cell th-s" style="text-align:center">SELL 卖出</div>
+    </div>
+    <div class="tb">
+      <div class="page" id="page"></div>
+      <div class="page-indicator" id="pageIndicator">第 1 / 1 页</div>
+    </div>
+  </section>
+
+  <footer>
+    <div>快捷键：F 全屏 · E 锁定 · Space 播放/暂停 · ←/→ 换页 · H 显示/隐藏设置</div>
+    <div>上次修改：<span id="updated">—</span></div>
+    <div style="text-align:right">汇率仅供参考，成交以柜台报价为准。</div>
+  </footer>
+</div>
+
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// 在这里填入你的 Firebase 配置（先参考同目录 firebase.sample.json）：
+window.FB_CONFIG = {};
+</script>
+
+<script>
+const Q = new URLSearchParams(location.search);
+const ROOM_Q = Q.get('room'); // may override
+const TV_MODE = Q.get('tv') === '1';
+const RPP_USER = Q.get('rpp');
+
+// ===== Settings =====
+const SETTINGS_KEY = 'exchange-board-settings-v2-store';
+const DEFAULT_SETTINGS = { speed: (Q.get('cycle')? Number(Q.get('cycle')):6), pauseOnEdit: true, hiddenControls: false, fontScale: 1, locked:false, keepAwake:false, room:'bangkok' };
+let SETTINGS = {...DEFAULT_SETTINGS};
+try{ SETTINGS = {...SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY))||{})}; }catch{}
+if(ROOM_Q) SETTINGS.room = ROOM_Q;
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }
+
+function setSpeed(sec){
+  const s = Math.max(0, Math.min(120, Math.floor(Number(sec)||0)));
+  SETTINGS.speed = s; saveSettings();
+  document.getElementById('speed').value = s;
+  document.getElementById('speedNum').value = s;
+  document.getElementById('speedLabel').textContent = (s===0? '（不轮播）':'秒');
+  updateCycleState();
+}
+
+const S = (n)=>(+n).toFixed(2);
+const sanitize=(s)=>{ const n=parseFloat(String(s).replace(/[^0-9.\-]/g,'')); return isNaN(n)?null:Math.max(0,n); };
+let locked = !!SETTINGS.locked;
+let baseScale = SETTINGS.fontScale || 1;
+let currentPage = 0, pages = [], cycleTimer=null, isPausedManually=false, isEditing=false;
+let applyingRemote=false;
+
+const STORE_KEY='exchange-cloud-v1-data-store';
+const DEFAULT = [
+  {flag:'🇺🇸', cn:'美元', th:'ดอลลาร์สหรัฐ', en:'USD', country:'United States',
+    items:[ {denom:'$1', buy:32.10, sell:32.60}, {denom:'$5–20', buy:32.40, sell:32.70}, {denom:'$100', buy:32.70, sell:32.73} ]},
+  {flag:'🇪🇺', cn:'欧元', th:'ยูโร', en:'EUR', country:'European Union',
+    items:[ {denom:'€5–20', buy:37.60, sell:37.95}, {denom:'€50', buy:37.80, sell:38.00}, {denom:'€100', buy:37.91, sell:38.05} ]},
+  {flag:'🇬🇧', cn:'英镑', th:'ปอนด์อังกฤษ', en:'GBP', country:'United Kingdom',
+    items:[ {denom:'£5–20', buy:43.10, sell:43.50}, {denom:'£50', buy:43.40, sell:43.60}, {denom:'£100', buy:43.51, sell:43.65} ]},
+  {flag:'🇨🇳', cn:'人民币', th:'หยวนจีน', en:'CNY', country:'China',
+    items:[ {denom:'¥10–50', buy:4.55, sell:4.62}, {denom:'¥100', buy:4.61, sell:4.65}, {denom:'¥200+', buy:4.62, sell:4.66} ]},
+  {flag:'🇸🇬', cn:'新元', th:'ดอลลาร์สิงคโปร์', en:'SGD', country:'Singapore',
+    items:[ {denom:'$20–5', buy:27.00, sell:27.30}, {denom:'$50–100', buy:27.30, sell:27.55}, {denom:'$1000', buy:27.25, sell:27.40} ]},
+  {flag:'🇦🇺', cn:'澳元', th:'ดอลลาร์ออสเตรเลีย', en:'AUD', country:'Australia',
+    items:[ {denom:'$5–20', buy:20.90, sell:21.20}, {denom:'$50–100', buy:21.13, sell:21.30}, {denom:'$500+', buy:21.20, sell:21.35} ]},
+  {flag:'🇨🇦', cn:'加元', th:'ดอลลาร์แคนาดา', en:'CAD', country:'Canada',
+    items:[ {denom:'$5–20', buy:23.10, sell:23.35}, {denom:'$50–100', buy:23.25, sell:23.45}, {denom:'$500+', buy:23.30, sell:23.55} ]},
+  {flag:'🇭🇰', cn:'港币', th:'ดอลลาร์ฮ่องกง', en:'HKD', country:'Hong Kong',
+    items:[ {denom:'$20–50', buy:4.18, sell:4.21}, {denom:'$100–500', buy:4.21, sell:4.22}, {denom:'$1000', buy:4.215, sell:4.225} ]},
+  {flag:'🇲🇾', cn:'马币', th:'ริงกิตมาเลเซีย', en:'MYR', country:'Malaysia',
+    items:[ {denom:'5–20', buy:7.60, sell:7.72}, {denom:'50–100', buy:7.68, sell:7.76}, {denom:'500+', buy:7.70, sell:7.78} ]},
+  {flag:'🇰🇷', cn:'韩元', th:'วอนเกาหลี', en:'KRW', country:'South Korea',
+    items:[ {denom:'₩1k–5k', buy:0.0235, sell:0.0245}, {denom:'₩10k', buy:0.024, sell:0.025}, {denom:'₩50k', buy:0.0242, sell:0.0252} ]}
+];
+let DATA = JSON.parse(JSON.stringify(DEFAULT));
+
+// ====== Build & render ======
+const pageEl = document.getElementById('page');
+const pageIndicator = document.getElementById('pageIndicator');
+const roomInput = document.getElementById('room');
+roomInput.value = SETTINGS.room || 'bangkok';
+
+function buildRows(){
+  const rows = [];
+  DATA.forEach((g, gi)=>{
+    g.items.forEach((it, si)=>{
+      rows.push({ gi, si, showHead: si===0, flag:g.flag, denom:it.denom, buy:it.buy, sell:it.sell });
+    });
+  });
+  return rows;
+}
+
+function drawPage(p){
+  const rows = pages[p];
+  pageEl.innerHTML = '';
+  rows.forEach((r, idx)=>{
+    const isHead = r.showHead;
+    const row = document.createElement('div');
+    row.className = 'row'+(isHead?' group-head':' sub')+(idx===rows.length-1?' group-tail':'');
+    row.dataset.gi = r.gi; row.dataset.si = r.si;
+    row.innerHTML = `
+      <div class="cell">${isHead?`<span class="flag-left">${DATA[r.gi].flag}</span>`:''}</div>
+      <div class="cell code">${isHead?`
+        <span class="cn">${DATA[r.gi].cn}</span>
+        <span class="tag">${DATA[r.gi].en}</span>
+        <span class="th">${DATA[r.gi].th}</span>
+        <span class="country">· ${DATA[r.gi].country}</span>`:''}
+      </div>
+      <div class="cell"><div class="numWrap"><div class="num denom" ${locked?'':'contenteditable'} data-key="denom">${DATA[r.gi].items[r.si].denom}</div></div></div>
+      <div class="cell"><div class="numWrap"><div class="num buy" ${locked?'':'contenteditable'} data-key="buy">${S(DATA[r.gi].items[r.si].buy)}</div></div></div>
+      <div class="cell"><div class="numWrap"><div class="num sell" ${locked?'':'contenteditable'} data-key="sell">${S(DATA[r.gi].items[r.si].sell)}</div></div></div>
+    `;
+    row.querySelectorAll('.num').forEach(el=>{
+      el.addEventListener('focus', ()=>{ isEditing = true; if(SETTINGS.pauseOnEdit) updateCycleState(); });
+      el.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+        if(e.key==='Escape'){ e.preventDefault(); const gi=+row.dataset.gi, si=+row.dataset.si, k=el.dataset.key;
+          if(k==='denom'){ el.textContent = DATA[gi].items[si].denom; }
+          else { el.textContent = S(DATA[gi].items[si][k]); }
+          el.blur();
+        }
+      });
+      el.addEventListener('blur', ()=>{
+        const gi=+row.dataset.gi, si=+row.dataset.si, k=el.dataset.key;
+        if(k==='denom'){ DATA[gi].items[si].denom = (el.textContent||'').trim() || '—'; touch(); return; }
+        const v = sanitize(el.textContent);
+        if(v==null){ el.textContent = S(DATA[gi].items[si][k]); return; }
+        DATA[gi].items[si][k] = v; el.textContent = S(v); touch();
+        setTimeout(()=>{ isEditing = false; if(SETTINGS.pauseOnEdit) updateCycleState(); }, 150);
+      });
+    });
+    pageEl.appendChild(row);
+  });
+}
+
+function render(){
+  const rows = buildRows();
+  pageEl.innerHTML = '';
+  const tb = document.querySelector('.tb');
+  const probe = document.createElement('div');
+  probe.className='row';
+  probe.innerHTML = `<div class="cell">🇺🇸</div><div class="cell code">美元 USD</div>
+                     <div class="cell"><div class="numWrap"><div class="num denom">样例</div></div></div>
+                     <div class="cell"><div class="numWrap"><div class="num buy">99.99</div></div></div>
+                     <div class="cell"><div class="numWrap"><div class="num sell">99.99</div></div></div>`;
+  pageEl.appendChild(probe);
+  const rowH = probe.getBoundingClientRect().height || 60;
+  pageEl.removeChild(probe);
+  const usableH = tb.getBoundingClientRect().height;
+  const autoRpp = Math.max(6, Math.floor(usableH / rowH));
+  // 门店专属：默认 9 行（3 国）
+  const RPP_DEFAULT = 9;
+  const RPP = RPP_USER ? Math.max(3, parseInt(RPP_USER,10)) : RPP_DEFAULT;
+
+  pages = [];
+  for(let i=0;i<rows.length;i+=RPP){ pages.push(rows.slice(i,i+RPP)); }
+  if(pages.length===0) pages=[[]];
+  currentPage = Math.min(currentPage, pages.length-1);
+  drawPage(currentPage);
+  pageIndicator.textContent = `第 ${currentPage+1} / ${pages.length} 页`;
+  updateCycleState();
+}
+
+// ====== Cycle / Pause ======
+function updateCycleState(){
+  if(cycleTimer) clearInterval(cycleTimer); cycleTimer=null;
+  const canPlay = (SETTINGS.speed>0) && (pages.length>1) && !isPausedManually && !(SETTINGS.pauseOnEdit && isEditing);
+  document.getElementById('btn-cycle-toggle').textContent = canPlay ? '⏸️ 轮播暂停' : '▶️ 轮播播放';
+  if(canPlay){ cycleTimer = setInterval(nextPage, SETTINGS.speed*1000); }
+}
+function nextPage(){ if(pages.length<=1) return; currentPage=(currentPage+1)%pages.length; drawPage(currentPage); pageIndicator.textContent = `第 ${currentPage+1} / ${pages.length} 页`; }
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(cycleTimer) clearInterval(cycleTimer); } else { updateCycleState(); } });
+
+// ====== Local save + (optional) cloud hook ======
+function touch(){ localStorage.setItem(STORE_KEY, JSON.stringify(DATA)); document.getElementById('updated').textContent = new Date().toLocaleString(); if(!applyingRemote) pushNow(); }
+
+// ====== Export / Import / Undo ======
+const historyStack = []; const HISTORY_MAX = 20;
+function pushHistory(){ const snap = JSON.stringify(DATA); if(historyStack.length===0 || historyStack[historyStack.length-1]!==snap){ historyStack.push(snap); if(historyStack.length>HISTORY_MAX) historyStack.shift(); } }
+function undo(){ if(historyStack.length===0) { alert('没有可撤销的更改'); return; } const last = historyStack.pop(); DATA = JSON.parse(last); touch(); render(); }
+
+// ====== Wake Lock ======
+let wakeLock = null;
+async function setWake(on){
+  SETTINGS.keepAwake = !!on; saveSettings();
+  const btn = document.getElementById('btn-wake');
+  if(!('wakeLock' in navigator)){ btn.textContent='🌙 常亮：不支持'; return; }
+  try{
+    if(SETTINGS.keepAwake){ wakeLock = await navigator.wakeLock.request('screen'); btn.textContent='🌙 常亮：开'; wakeLock.addEventListener('release',()=>{btn.textContent='🌙 常亮：关'; SETTINGS.keepAwake=false; saveSettings();}); }
+    else { if(wakeLock){ wakeLock.release(); wakeLock=null; } btn.textContent='🌙 常亮：关'; }
+  }catch(e){ console.warn(e); btn.textContent='🌙 常亮：失败'; }
+}
+
+// ====== Controls + Shortcuts ======
+const hintEl = document.getElementById('hint');
+function hint(s){ hintEl.textContent=s; setTimeout(()=>{ if(hintEl.textContent===s) hintEl.textContent=''; }, 3000); }
+
+document.getElementById('btn-full').onclick=()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+document.getElementById('btn-lock').onclick=()=>{ locked=!locked; SETTINGS.locked=locked; saveSettings(); document.getElementById('btn-lock').textContent=locked?'🔒 已锁定':'🔓 编辑中'; render(); };
+document.getElementById('btn-font-up').onclick=()=>{ baseScale=Math.min(2.4, (baseScale||1)+0.06); SETTINGS.fontScale=baseScale; saveSettings(); document.documentElement.style.setProperty('--fs-base', String(baseScale)); render(); };
+document.getElementById('btn-font-down').onclick=()=>{ baseScale=Math.max(0.6, (baseScale||1)-0.06); SETTINGS.fontScale=baseScale; saveSettings(); document.documentElement.style.setProperty('--fs-base', String(baseScale)); render(); };
+document.getElementById('btn-save').onclick=()=>{ localStorage.setItem(STORE_KEY, JSON.stringify(DATA)); alert('已保存到本机'); };
+document.getElementById('btn-reset').onclick=()=>{ if(confirm('确定恢复默认？将覆盖当前更改。')){ pushHistory(); DATA = JSON.parse(JSON.stringify(DEFAULT)); localStorage.setItem(STORE_KEY, JSON.stringify(DATA)); render(); pushNow(); }};
+document.getElementById('btn-export').onclick=()=>{ const blob = new Blob([JSON.stringify(DATA,null,2)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '汇率数据.json'; document.body.appendChild(a); a.click(); a.remove(); };
+document.getElementById('file').addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ try{ pushHistory(); DATA=JSON.parse(reader.result); touch(); render(); }catch{ alert('导入失败：文件格式不正确'); } }; reader.readAsText(f,'utf-8'); e.target.value=''; });
+document.getElementById('btn-undo').onclick=()=>undo();
+document.getElementById('btn-wake').onclick=()=>setWake(!SETTINGS.keepAwake);
+
+document.getElementById('btn-cycle-toggle').onclick=()=>{ isPausedManually = !isPausedManually; updateCycleState(); };
+document.getElementById('speed').addEventListener('input', e=>setSpeed(e.target.value));
+document.getElementById('speedNum').addEventListener('change', e=>setSpeed(e.target.value));
+
+const pauseBtn = document.getElementById('btn-pause-edit');
+pauseBtn.onclick=()=>{ SETTINGS.pauseOnEdit = !SETTINGS.pauseOnEdit; pauseBtn.setAttribute('aria-pressed', SETTINGS.pauseOnEdit?'true':'false'); pauseBtn.textContent = `✍️ 编辑时暂停：${SETTINGS.pauseOnEdit?'开':'关'}`; saveSettings(); updateCycleState(); };
+
+// 隐藏/显示设置面板
+const controls = document.getElementById('controls');
+const gear = document.getElementById('gearFloat');
+function setControlsHidden(hide){
+  SETTINGS.hiddenControls = !!hide; saveSettings();
+  controls.classList.toggle('hide', SETTINGS.hiddenControls);
+  gear.classList.toggle('hide', !SETTINGS.hiddenControls);
+}
+document.getElementById('btn-hide').onclick=()=>setControlsHidden(true);
+gear.onclick=()=>setControlsHidden(false);
+roomInput.addEventListener('change', ()=>{ SETTINGS.room = roomInput.value.trim()||'bangkok'; saveSettings(); });
+
+// 键盘
+document.addEventListener('keydown', e=>{
+  if(e.key==='f' || e.key==='F'){ document.getElementById('btn-full').click(); }
+  if(e.key==='e' || e.key==='E'){ document.getElementById('btn-lock').click(); }
+  if(e.key===' '){ e.preventDefault(); document.getElementById('btn-cycle-toggle').click(); }
+  if(e.key==='ArrowRight'){ nextPage(); }
+  if(e.key==='ArrowLeft'){ currentPage=(currentPage-1+pages.length)%pages.length; drawPage(currentPage); pageIndicator.textContent = `第 ${currentPage+1} / ${pages.length} 页`; }
+  if(e.key==='h' || e.key==='H' || (e.ctrlKey && e.key==='/')){ setControlsHidden(!SETTINGS.hiddenControls); }
+});
+
+// 时钟
+(function tick(){ const n=new Date(); document.getElementById('time').textContent=n.toLocaleTimeString(); document.getElementById('date').textContent=n.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric',weekday:'long'}); setTimeout(tick,1000); })();
+
+addEventListener('resize', ()=>render());
+
+// ====== Init ======
+function initUIFromSettings(){
+  // scale & lock
+  document.documentElement.style.setProperty('--fs-base', String(baseScale||1));
+  document.getElementById('btn-lock').textContent=locked?'🔒 已锁定':'🔓 编辑中';
+  // speed & pauseOnEdit
+  setSpeed(SETTINGS.speed);
+  pauseBtn.setAttribute('aria-pressed', SETTINGS.pauseOnEdit?'true':'false');
+  pauseBtn.textContent = `✍️ 编辑时暂停：${SETTINGS.pauseOnEdit?'开':'关'}`;
+  // controls hidden?
+  setControlsHidden(SETTINGS.hiddenControls || false);
+  // wake lock
+  if(SETTINGS.keepAwake) setWake(true);
+}
+
+function pushNow(){ /* cloud version will override */ }
+
+(function init(){
+  const saved = localStorage.getItem(STORE_KEY);
+  if(saved){ try{ DATA = JSON.parse(saved) || DATA; }catch{} }
+  render();
+  document.getElementById('updated').textContent = new Date().toLocaleString();
+  if(TV_MODE){ locked=true; SETTINGS.locked=true; saveSettings(); document.getElementById('btn-lock').textContent='🔒 已锁定'; setControlsHidden(true); }
+  initUIFromSettings();
+})();
+</script>
+
+<script>
+let cloudOn=false, app=null, db=null, ref=null;
+function cloudEnable(on){
+  if(on===cloudOn) return;
+  if(on){
+    if(!window.FB_CONFIG || !FB_CONFIG.apiKey){ alert('请先在代码中填入 Firebase 配置'); return; }
+    try{
+      app = firebase.apps?.length ? firebase.app() : firebase.initializeApp(FB_CONFIG);
+      db = firebase.database();
+      ref = db.ref('exchange/cloud/v1/'+(document.getElementById('room').value.trim()||'bangkok'));
+      ref.on('value', snap=>{
+        const v=snap.val(); if(!v) return;
+        applyingRemote=true; DATA = v.data || DATA;
+        document.getElementById('updated').textContent = new Date(v.updated||Date.now()).toLocaleString();
+        render(); applyingRemote=false;
+      });
+      cloudOn = true; document.getElementById('btn-cloud').textContent='☁️ 云同步：开'; 
+      pushNow();
+    }catch(e){ console.error(e); alert('连接 Firebase 失败，请检查配置'); }
+  }else{
+    if(ref){ ref.off(); ref=null; }
+    cloudOn = false; document.getElementById('btn-cloud').textContent='☁️ 云同步：关';
+  }
+}
+function pushNow(){ if(!cloudOn || !ref) return; ref.set({ data: DATA, updated: Date.now() }); }
+
+// 房间名更改后，若在云端模式则重连
+document.getElementById('room').addEventListener('change', ()=>{ if(cloudOn){ cloudEnable(false); cloudEnable(true); } });
+
+// 初始化：若 URL 带 cloud=1 则自动连接
+(function(){
+  const auto = new URLSearchParams(location.search).get('cloud')==='1';
+  const btn = document.getElementById('btn-cloud');
+  btn.onclick=()=>cloudEnable(!cloudOn);
+  if(auto) cloudEnable(true);
+})();
+</script>
+
+</body>
+</html>
