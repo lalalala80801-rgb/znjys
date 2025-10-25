@@ -141,7 +141,28 @@ footer{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:cent
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 // 在这里填入你的 Firebase 配置（先参考同目录 firebase.sample.json）：
-window.FB_CONFIG = {};
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD0dEK5P8CHdHPUBFCNLQRBlSRuCtv3GIs",
+  authDomain: "znjys-b4c98.firebaseapp.com",
+  databaseURL: "https://znjys-b4c98-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "znjys-b4c98",
+  storageBucket: "znjys-b4c98.firebasestorage.app",
+  messagingSenderId: "762313114991",
+  appId: "1:762313114991:web:092c17431572a281f0549a",
+  measurementId: "G-W835L9T6DG"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 </script>
 
 <script>
